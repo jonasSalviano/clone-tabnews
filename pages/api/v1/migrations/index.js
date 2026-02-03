@@ -3,35 +3,46 @@ import { join } from "node:path";
 import database from "infra/database";
 
 export default async function migrations(request, response) {
-  const dbClient = await database.getNewClient();
-  const defaultConfig = {
-    dbClient: dbClient,
-    dryRun: true,
-    dir: join("infra", "migrations"),
-    direction: "up",
-    verbose: true,
-    migrationsTable: "pgmigrations",
-  };
+  const methodsAllowed = ["GET", "POST"];
+  const methodCurrent = request.method;
 
-  if (request.method === "GET") {
-    const pendingMigration = await migrationRunner(defaultConfig);
-    await dbClient.end();
-    return response.status(201).json(pendingMigration);
+  if (!methodsAllowed.includes(methodCurrent)) {
+    return response.status(405).json({ error: "Method not Allowed" });
   }
 
-  if (request.method === "POST") {
-    const migrateMigrations = await migrationRunner({
-      ...defaultConfig,
-      dryRun: false,
-    });
+  let dbClient;
 
-    await dbClient.end();
+  try {
+    dbClient = await database.getNewClient();
+    const defaultConfig = {
+      dbClient: dbClient,
+      dryRun: true,
+      dir: join("infra", "migrations"),
+      direction: "up",
+      verbose: true,
+      migrationsTable: "pgmigrations",
+    };
 
-    if (migrateMigrations.length > 0) {
-      return response.status(201).json(migrateMigrations);
+    if (methodCurrent === "GET") {
+      const pendingMigration = await migrationRunner(defaultConfig);
+      return response.status(201).json(pendingMigration);
     }
-    return response.status(200).json(migrateMigrations);
-  }
 
-  return response.status(405);
+    if (methodCurrent === "POST") {
+      const migrateMigrations = await migrationRunner({
+        ...defaultConfig,
+        dryRun: false,
+      });
+
+      if (migrateMigrations.length > 0) {
+        return response.status(201).json(migrateMigrations);
+      }
+      return response.status(200).json(migrateMigrations);
+    }
+  } catch (error) {
+    console.log(error);
+    throw error;
+  } finally {
+    await dbClient.end();
+  }
 }
