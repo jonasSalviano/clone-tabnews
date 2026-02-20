@@ -4,8 +4,7 @@
   "description": "Repositorio criado para estudo do curso.dev",
   "main": "index.js",
   "scripts": {
-    "dev": "npm run services:up && npm run services:wait:database && npm run migrations:up && next dev",
-    "postdev": "npm run services:down",
+    "dev": "npm run services:up && npm run services:wait:database && npm run migrations:up && node infra/scripts/run-dev.js && next dev ",
     "test": "npm run services:up && concurrently -n next,jest --hide next -k -s command-jest \"next dev\" \"jest --runInBand --verbose\"",
     "posttest": "npm run services:down",
     "test:watch": "jest --watchAll --runInBand",
