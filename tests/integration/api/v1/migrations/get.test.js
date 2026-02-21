@@ -6,10 +6,14 @@ beforeAll(async () => {
   await database.query("drop schema public cascade; create schema public;");
 });
 
-test("GET /api/v1/migrations should returns 200", async () => {
-  const res = await fetch("http://localhost:3000/api/v1/migrations");
+describe("GET /api/v1/migrations", () => {
+  describe("Anonymous user", () => {
+    test("Retrieving pending migrations", async () => {
+      const res = await fetch("http://localhost:3000/api/v1/migrations");
 
-  const responseBody = await res.json();
-  expect(Array.isArray(responseBody)).toBe(true);
-  expect(responseBody.length).toBeGreaterThan(0);
+      const responseBody = await res.json();
+      expect(Array.isArray(responseBody)).toBe(true);
+      expect(responseBody.length).toBeGreaterThan(0);
+    });
+  });
 });
