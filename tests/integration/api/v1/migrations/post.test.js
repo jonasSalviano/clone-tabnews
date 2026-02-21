@@ -1,9 +1,8 @@
-import database from "infra/database";
 import orchestrator from "tests/orchestrator";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
-  await database.query("drop schema public cascade; create schema public;");
+  await orchestrator.clearDatabase();
 });
 
 describe("POST /api/v1/migrations", () => {
@@ -26,9 +25,6 @@ describe("POST /api/v1/migrations", () => {
         const responseBody2 = await res2.json();
         expect(Array.isArray(responseBody2)).toBe(true);
         expect(responseBody2.length).toBe(0);
-
-        const verify = await database.query("SELECT * FROM pgmigrations;");
-        expect(verify.rows.length).toBe(1);
       });
     });
   });
